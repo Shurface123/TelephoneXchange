@@ -57,6 +57,29 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     [session.userId, params.id, "127.0.0.1"]
   )
 
+  // Notify the original reporter about status changes
+  if (faultStatus) {
+    const [faultRow] = await query<{ reported_by: number; fault_reference: string }>(
+      "SELECT reported_by, fault_reference FROM fault_reports WHERE id = ?", [params.id]
+    )
+    if (faultRow && faultRow.reported_by !== session.userId) {
+      const statusLabels: Record<string, string> = {
+        assigned: "has been assigned to a technician",
+        in_progress: "is now being worked on",
+        resolved: "has been RESOLVED",
+        closed: "has been closed",
+      }
+      const label = statusLabels[faultStatus]
+      if (label) {
+        await execute(
+          `INSERT INTO notifications (user_id, title, message, notification_type, reference_table, reference_id)
+           VALUES (?, ?, ?, 'fault', 'fault_reports', ?)`,
+          [faultRow.reported_by, `Fault ${faultRow.fault_reference} ${label}`, `Status updated to: ${faultStatus}`, params.id]
+        )
+      }
+    }
+  }
+
   const updated = await query(
     `SELECT fr.*, CONCAT(au.first_name, ' ', au.last_name) as assigned_to_name
      FROM fault_reports fr LEFT JOIN users au ON fr.assigned_to = au.id WHERE fr.id = ?`,

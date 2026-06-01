@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import {
     Phone, LayoutDashboard, Receipt, Wrench, BarChart3,
     Settings, LogOut, Menu, X, PhoneCall, ChevronRight,
@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ModeToggle } from "@/components/mode-toggle"
+import { useToast } from "@/hooks/use-toast"
 
 const NAV_ITEMS = [
     { href: "/", label: "Dashboard", icon: LayoutDashboard, roles: ["admin", "receptionist", "technician"] },
@@ -20,6 +21,7 @@ const NAV_ITEMS = [
     { href: "/billing", label: "Billing", icon: Receipt, roles: ["admin", "receptionist"] },
     { href: "/maintenance", label: "Maintenance", icon: Wrench, roles: ["admin", "technician"] },
     { href: "/reports", label: "Reports", icon: BarChart3, roles: ["admin", "receptionist", "technician"] },
+    { href: "/manager", label: "Management", icon: BarChart3, roles: ["admin", "manager"] },
     { href: "/admin", label: "Administration", icon: Shield, roles: ["admin"] },
 ]
 
@@ -34,6 +36,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null)
     const [currentTime, setCurrentTime] = useState("")
     const [activeCalls, setActiveCalls] = useState(0)
+    const { toast } = useToast()
+    const [notifications, setNotifications] = useState<any[]>([])
+    const [unreadCount, setUnreadCount] = useState(0)
+    const [showNotifications, setShowNotifications] = useState(false)
+    const prevNotificationIdsRef = useRef<Set<number>>(new Set())
 
     // Fetch session user
     useEffect(() => {
@@ -67,6 +74,57 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         return () => clearInterval(interval)
     }, [])
 
+    // Poll notifications
+    useEffect(() => {
+        if (!user) return
+        const fetchNotifications = async () => {
+            try {
+                const res = await fetch("/api/notifications")
+                if (res.ok) {
+                    const data = await res.json()
+                    setNotifications(data.notifications)
+                    setUnreadCount(data.unreadCount)
+                    
+                    const prevIds = prevNotificationIdsRef.current
+                    const newIds = new Set<number>()
+                    
+                    data.notifications.forEach((n: any) => {
+                        newIds.add(n.id)
+                        if (!n.is_read && !prevIds.has(n.id)) {
+                            if (prevIds.size > 0) {
+                                toast({
+                                    title: n.title,
+                                    description: n.message || "New alert received",
+                                })
+                            }
+                        }
+                    })
+                    prevNotificationIdsRef.current = newIds
+                }
+            } catch (e) {
+                console.error("Notifications poll error:", e)
+            }
+        }
+        fetchNotifications()
+        const interval = setInterval(fetchNotifications, 10000)
+        return () => clearInterval(interval)
+    }, [user, toast])
+
+    const handleMarkAllRead = async () => {
+        try {
+            const res = await fetch("/api/notifications", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ markAll: true })
+            })
+            if (res.ok) {
+                setUnreadCount(0)
+                setNotifications(prev => prev.map(n => ({ ...n, is_read: true })))
+                toast({ title: "Notifications cleared", description: "All notifications marked as read" })
+            }
+        } catch (e) { }
+    }
+
     const handleLogout = async () => {
         await fetch("/api/auth/logout", { method: "POST" })
         router.push("/login")
@@ -82,7 +140,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
 
     const roleLabel: Record<string, string> = {
-        admin: "Administrator", receptionist: "Receptionist", technician: "Technician"
+        admin: "Administrator", receptionist: "Receptionist", technician: "Technician", manager: "Manager"
     }
 
     return (
@@ -177,7 +235,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                         </p>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 relative">
                         {activeCalls > 0 && (
                             <Link href="/receptionist">
                                 <div className="flex items-center gap-1.5 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 px-3 py-1.5 rounded-full text-xs font-medium border border-blue-200 dark:border-blue-800 hover:bg-blue-100 transition-colors">
@@ -186,6 +244,76 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                                 </div>
                             </Link>
                         )}
+                        
+                        {/* Notifications Bell Dropdown */}
+                        <div className="relative">
+                            <button
+                                onClick={() => setShowNotifications(!showNotifications)}
+                                className="relative p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 transition-all focus:outline-none"
+                            >
+                                <Bell className="h-5 w-5" />
+                                {unreadCount > 0 && (
+                                    <span className="absolute top-1 right-1 bg-red-500 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center border border-white dark:border-slate-900 animate-pulse">
+                                        {unreadCount}
+                                    </span>
+                                )}
+                            </button>
+
+                            {showNotifications && (
+                                <>
+                                    <div 
+                                        className="fixed inset-0 z-45" 
+                                        onClick={() => setShowNotifications(false)}
+                                    />
+                                    <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-gray-150 dark:border-slate-800 z-50 overflow-hidden divide-y divide-gray-100 dark:divide-slate-800 animate-in fade-in slide-in-from-top-2 duration-200">
+                                        <div className="px-4 py-3 flex items-center justify-between bg-gray-50/50 dark:bg-slate-900/50">
+                                            <span className="font-semibold text-xs text-gray-900 dark:text-white uppercase tracking-wider">Alerts</span>
+                                            {unreadCount > 0 && (
+                                                <button 
+                                                    onClick={handleMarkAllRead}
+                                                    className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                                                >
+                                                    Mark all read
+                                                </button>
+                                            )}
+                                        </div>
+                                        <div className="max-h-72 overflow-y-auto divide-y divide-gray-100 dark:divide-slate-800">
+                                            {notifications.length === 0 ? (
+                                                <div className="p-6 text-center text-xs text-muted-foreground">
+                                                    No notifications
+                                                </div>
+                                            ) : (
+                                                notifications.map((n: any) => (
+                                                    <div 
+                                                        key={n.id} 
+                                                        className={cn(
+                                                            "px-4 py-3 text-left transition-colors",
+                                                            n.is_read ? "bg-white dark:bg-slate-900" : "bg-blue-50/40 dark:bg-blue-950/20"
+                                                        )}
+                                                    >
+                                                        <div className="flex justify-between items-start gap-2">
+                                                            <p className={cn("text-xs font-semibold", n.is_read ? "text-gray-900 dark:text-white" : "text-blue-600 dark:text-blue-400")}>
+                                                                {n.title}
+                                                            </p>
+                                                            {!n.is_read && <span className="w-1.5 h-1.5 bg-blue-600 rounded-full flex-shrink-0 mt-1" />}
+                                                        </div>
+                                                        {n.message && (
+                                                            <p className="text-[11px] text-muted-foreground mt-1 leading-snug">
+                                                                {n.message}
+                                                            </p>
+                                                        )}
+                                                        <p className="text-[9px] text-gray-400 dark:text-gray-500 mt-1.5 font-mono">
+                                                            {new Date(n.created_at).toLocaleString("en-GH", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                                                        </p>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
                         <ModeToggle />
                     </div>
                 </header>

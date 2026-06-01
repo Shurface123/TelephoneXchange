@@ -1,16 +1,23 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { Eye, EyeOff, Phone, Loader2, Shield, AlertCircle } from "lucide-react"
+import { useState, useEffect, Suspense } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { Eye, EyeOff, Phone, Loader2, Shield, AlertCircle, Database, CheckCircle2, Lock } from "lucide-react"
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const fromPath = searchParams?.get("from") || "/"
+  const isExpired = searchParams?.get("expired") === "1"
+
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
+  const [error, setError] = useState(isExpired ? "Your session has expired. Please sign in again." : "")
+  const [isDbError, setIsDbError] = useState(false)
+  const [isLocked, setIsLocked] = useState(false)
+  const [attemptsRemaining, setAttemptsRemaining] = useState<number | null>(null)
   const [shake, setShake] = useState(false)
   const [currentTime, setCurrentTime] = useState("")
 
@@ -24,10 +31,16 @@ export default function LoginPage() {
     return () => clearInterval(interval)
   }, [])
 
+  const triggerShake = () => {
+    setShake(true)
+    setTimeout(() => setShake(false), 600)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!username || !password) { setError("Please enter your credentials"); return }
-    setLoading(true); setError("")
+    if (isLocked) return
+    if (!username || !password) { setError("Please enter your credentials"); triggerShake(); return }
+    setLoading(true); setError(""); setIsDbError(false); setIsLocked(false); setAttemptsRemaining(null)
 
     try {
       const res = await fetch("/api/auth/login", {
@@ -38,16 +51,24 @@ export default function LoginPage() {
       const data = await res.json()
 
       if (!res.ok) {
+        setIsDbError(res.status === 503)
+        setIsLocked(data.locked === true || res.status === 429)
+        if (typeof data.attemptsRemaining === "number") setAttemptsRemaining(data.attemptsRemaining)
         setError(data.error || "Login failed")
-        setShake(true)
-        setTimeout(() => setShake(false), 600)
+        triggerShake()
       } else {
-        router.push("/")
+        // Redirect to original destination or role-appropriate dashboard
+        const role = data.user?.role
+        const dest = fromPath !== "/" ? fromPath :
+          role === "technician" ? "/maintenance" :
+          role === "receptionist" ? "/receptionist" :
+          role === "manager" ? "/manager" : "/"
+        router.push(dest)
         router.refresh()
       }
     } catch {
-      setError("Connection error. Please try again.")
-      setShake(true); setTimeout(() => setShake(false), 600)
+      setError("Connection error. Please check your network and try again.")
+      triggerShake()
     } finally {
       setLoading(false)
     }
@@ -60,7 +81,6 @@ export default function LoginPage() {
         <div className="absolute -top-40 -right-40 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl animate-pulse" />
         <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-900/10 rounded-full blur-3xl" />
-        {/* Grid pattern */}
         <div className="absolute inset-0 opacity-5" style={{
           backgroundImage: "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)",
           backgroundSize: "50px 50px"
@@ -80,7 +100,7 @@ export default function LoginPage() {
 
         {/* Glassmorphism card */}
         <div
-          className={`bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl transition-all ${shake ? "animate-[shake_0.5s_ease-in-out]" : ""}`}
+          className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl"
           style={shake ? { animation: "shake 0.5s ease-in-out" } : {}}
         >
           <div className="mb-6">
@@ -89,9 +109,31 @@ export default function LoginPage() {
           </div>
 
           {error && (
-            <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg px-4 py-3 mb-5 text-sm">
-              <AlertCircle className="h-4 w-4 flex-shrink-0" />
-              <span>{error}</span>
+            <div className={`flex items-start gap-2 border rounded-lg px-4 py-3 mb-5 text-sm ${
+              isDbError ? "bg-orange-500/10 border-orange-500/30 text-orange-300" :
+              isLocked ? "bg-amber-500/10 border-amber-500/30 text-amber-300" :
+              "bg-red-500/10 border-red-500/30 text-red-400"
+            }`}>
+              {isDbError ? <Database className="h-4 w-4 flex-shrink-0 mt-0.5" /> :
+               isLocked ? <Lock className="h-4 w-4 flex-shrink-0 mt-0.5" /> :
+               <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />}
+              <div className="flex-1">
+                <p>{error}</p>
+                {attemptsRemaining !== null && attemptsRemaining > 0 && (
+                  <p className="text-xs mt-1 opacity-80">
+                    {attemptsRemaining} attempt{attemptsRemaining !== 1 ? "s" : ""} remaining before lockout
+                  </p>
+                )}
+                {isDbError && (
+                  <div className="mt-2 text-xs text-orange-400/80 space-y-1">
+                    <p className="font-medium">Setup steps:</p>
+                    <p>1. Open <strong>phpMyAdmin</strong> (localhost/phpmyadmin)</p>
+                    <p>2. Run <code className="bg-orange-900/30 px-1 rounded">database/schema.sql</code></p>
+                    <p>3. Run <code className="bg-orange-900/30 px-1 rounded">database/seed.sql</code></p>
+                    <p>4. Ensure WAMP MySQL service is running</p>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -135,31 +177,38 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-blue-600/30 hover:shadow-blue-500/40 hover:-translate-y-0.5 active:translate-y-0"
+              disabled={loading || isLocked}
+              className={`w-full font-semibold py-3 px-4 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-lg ${
+                isLocked
+                  ? "bg-amber-700/60 cursor-not-allowed text-amber-200 shadow-amber-900/30"
+                  : "bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800 disabled:cursor-not-allowed text-white shadow-blue-600/30 hover:shadow-blue-500/40 hover:-translate-y-0.5 active:translate-y-0"
+              }`}
             >
               {loading ? (
                 <><Loader2 className="h-4 w-4 animate-spin" /> Signing in...</>
+              ) : isLocked ? (
+                <><Lock className="h-4 w-4" /> Account Temporarily Locked</>
               ) : (
                 <><Shield className="h-4 w-4" /> Sign In Securely</>
               )}
             </button>
           </form>
 
-          {/* Demo credentials hint */}
+          {/* Demo credentials */}
           <div className="mt-6 pt-5 border-t border-white/10">
-            <p className="text-xs text-slate-500 text-center mb-3">Demo Credentials</p>
-            <div className="grid grid-cols-3 gap-2">
+            <p className="text-xs text-slate-500 text-center mb-3">Demo Credentials (password: <code className="text-slate-400">password</code>)</p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {[
-                { role: "Admin", user: "admin" },
-                { role: "Reception", user: "receptionist" },
-                { role: "Technician", user: "technician" },
-              ].map(({ role, user }) => (
+                { role: "Admin", user: "admin", color: "hover:border-purple-500/40 hover:bg-purple-500/5" },
+                { role: "Reception", user: "receptionist", color: "hover:border-blue-500/40 hover:bg-blue-500/5" },
+                { role: "Manager", user: "manager", color: "hover:border-emerald-500/40 hover:bg-emerald-500/5" },
+                { role: "Technician", user: "technician", color: "hover:border-orange-500/40 hover:bg-orange-500/5" },
+              ].map(({ role, user, color }) => (
                 <button
                   key={user}
                   type="button"
-                  onClick={() => { setUsername(user); setPassword("password") }}
-                  className="text-xs bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg py-2 px-2 text-slate-400 hover:text-white transition-all text-center"
+                  onClick={() => { setUsername(user); setPassword("password"); setError(""); setIsDbError(false); setIsLocked(false); setAttemptsRemaining(null) }}
+                  className={`text-xs bg-white/5 border border-white/10 rounded-lg py-2.5 px-2 text-slate-400 hover:text-white transition-all text-center ${color}`}
                 >
                   <div className="font-medium">{role}</div>
                   <div className="text-slate-600 text-[10px]">{user}</div>
@@ -169,13 +218,12 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Footer */}
         <p className="text-center text-slate-600 text-xs mt-6">
           © {new Date().getFullYear()} COCOBOD CHED · Secure Access System
         </p>
       </div>
 
-      <style jsx>{`
+      <style>{`
         @keyframes shake {
           0%, 100% { transform: translateX(0); }
           10%, 30%, 50%, 70%, 90% { transform: translateX(-6px); }
@@ -183,5 +231,13 @@ export default function LoginPage() {
         }
       `}</style>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-slate-950" />}>
+      <LoginForm />
+    </Suspense>
   )
 }

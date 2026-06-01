@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/hooks/use-toast"
 import {
   Phone, PhoneCall, PhoneOff, PhoneMissed, Search, Plus, Clock,
-  RefreshCw, User, Building2, AlertCircle, CheckCircle2, ChevronRight, Bell
+  RefreshCw, User, Building2, AlertCircle, CheckCircle2, ChevronRight, Bell, X
 } from "lucide-react"
 
 const priorityColors: Record<string, string> = {
@@ -36,9 +36,19 @@ export default function ReceptionistPage() {
   const { toast } = useToast()
   const [activeCallsData, setActiveCallsData] = useState<any>(null)
   const [departments, setDepartments] = useState<any[]>([])
+  const [usersList, setUsersList] = useState<any[]>([])
   const [followUps, setFollowUps] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
+  const [transferring, setTransferring] = useState(false)
+  
+  // Call transfer states
+  const [transferCallId, setTransferCallId] = useState<number | null>(null)
+  const [transferDeptId, setTransferDeptId] = useState("")
+  const [transferUserId, setTransferUserId] = useState("")
+  const [transferReason, setTransferReason] = useState("")
+  const [transferNotes, setTransferNotes] = useState("")
+
   const [contactSearch, setContactSearch] = useState("")
   const [contactResults, setContactResults] = useState<any[]>([])
   const [showContactDropdown, setShowContactDropdown] = useState(false)
@@ -51,13 +61,15 @@ export default function ReceptionistPage() {
 
   const fetchData = useCallback(async () => {
     try {
-      const [statsRes, deptRes, followRes] = await Promise.all([
+      const [statsRes, deptRes, followRes, usersRes] = await Promise.all([
         fetch("/api/calls/stats"),
         fetch("/api/departments"),
         fetch("/api/calls?status=completed&limit=50"),
+        fetch("/api/users"),
       ])
       if (statsRes.ok) setActiveCallsData(await statsRes.json())
       if (deptRes.ok) { const d = await deptRes.json(); setDepartments(d.departments) }
+      if (usersRes.ok) { const d = await usersRes.json(); setUsersList(d.users || []) }
       if (followRes.ok) {
         const d = await followRes.json()
         const today = new Date().toISOString().split("T")[0]
@@ -66,6 +78,46 @@ export default function ReceptionistPage() {
     } catch (e) { console.error(e) }
     finally { setLoading(false) }
   }, [])
+
+  const handleTransfer = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!transferCallId) return
+    setTransferring(true)
+    try {
+      const callObj = activeCallsData?.activeCallsList?.find((c: any) => c.id === transferCallId)
+      const empObj = usersList.find((u: any) => u.id === parseInt(transferUserId))
+
+      const res = await fetch("/api/calls/transfer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          callId: transferCallId,
+          fromDepartmentId: callObj?.department_id || null,
+          fromEmployeeId: null,
+          toDepartmentId: parseInt(transferDeptId) || null,
+          toEmployeeId: empObj?.employee_id || null,
+          transferReason,
+          transferNotes
+        })
+      })
+      if (res.ok) {
+        toast({ title: "Call transferred", description: "The call has been successfully routed." })
+        setTransferCallId(null)
+        setTransferDeptId("")
+        setTransferUserId("")
+        setTransferReason("")
+        setTransferNotes("")
+        fetchData()
+      } else {
+        const d = await res.json()
+        toast({ title: "Transfer failed", description: d.error || "Failed to transfer call", variant: "destructive" })
+      }
+    } catch {
+      toast({ title: "Error", description: "An error occurred during transfer", variant: "destructive" })
+    } finally {
+      setTransferring(false)
+    }
+  }
 
   useEffect(() => {
     fetchData()
@@ -295,8 +347,11 @@ export default function ReceptionistPage() {
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
                       {call.start_time && <CallTimer startTime={call.start_time} />}
+                      <Button size="sm" variant="outline" onClick={() => setTransferCallId(call.id)} className="h-7 px-2 gap-1 text-xs bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-950/20 dark:text-purple-400 dark:border-purple-800">
+                        <Phone className="h-3 w-3 rotate-90" /> Route
+                      </Button>
                       <Button size="sm" variant="destructive" onClick={() => endCall(call.id)} className="h-7 px-2 gap-1 text-xs">
                         <PhoneOff className="h-3 w-3" /> End
                       </Button>
@@ -332,6 +387,101 @@ export default function ReceptionistPage() {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Call Routing/Transfer Modal */}
+      {transferCallId !== null && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-gray-150 dark:border-slate-800 w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="px-6 py-4 border-b border-gray-150 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/50 flex items-center justify-between">
+              <div>
+                <h3 className="font-bold text-sm text-gray-900 dark:text-white uppercase tracking-wider">Route Active Call</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">Route call to department & operator</p>
+              </div>
+              <button 
+                onClick={() => setTransferCallId(null)}
+                className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <form onSubmit={handleTransfer} className="p-6 space-y-4">
+              <div>
+                <label className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1 block">Target Department</label>
+                <select
+                  value={transferDeptId}
+                  onChange={e => setTransferDeptId(e.target.value)}
+                  required
+                  className="w-full h-10 rounded-lg border border-input bg-background px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
+                >
+                  <option value="">Select Target Department...</option>
+                  {departments.map((d: any) => (
+                    <option key={d.id} value={d.id}>{d.department_name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1 block">Target Employee / Operator</label>
+                <select
+                  value={transferUserId}
+                  onChange={e => setTransferUserId(e.target.value)}
+                  className="w-full h-10 rounded-lg border border-input bg-background px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
+                >
+                  <option value="">Select Operator (Optional)...</option>
+                  {usersList
+                    .filter((u: any) => !transferDeptId || u.department_name === departments.find(d => d.id === parseInt(transferDeptId))?.department_name)
+                    .map((u: any) => (
+                      <option key={u.id} value={u.id}>
+                        {u.first_name} {u.last_name} ({u.position || u.role})
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1 block">Transfer Reason</label>
+                <Input 
+                  value={transferReason}
+                  onChange={e => setTransferReason(e.target.value)}
+                  placeholder="e.g. Inquiry about billing discrepancy"
+                  className="h-10 rounded-lg"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1 block">Internal Routing Notes</label>
+                <textarea
+                  value={transferNotes}
+                  onChange={e => setTransferNotes(e.target.value)}
+                  placeholder="Any additional context for the receiving operator..."
+                  rows={3}
+                  className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all resize-none"
+                />
+              </div>
+
+              <div className="flex gap-3 justify-end pt-2">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setTransferCallId(null)}
+                  className="h-10 rounded-lg px-4"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={transferring}
+                  className="h-10 rounded-lg px-5 bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20"
+                >
+                  {transferring ? <RefreshCw className="h-4 w-4 animate-spin mr-2" /> : <Phone className="h-4 w-4 rotate-90 mr-2" />}
+                  Confirm Route
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   )

@@ -70,6 +70,24 @@ export async function POST(request: NextRequest) {
     )
 
     const fault = await query("SELECT * FROM fault_reports WHERE id = ?", [insertId])
+
+    // Notify all technicians and admins about the new fault
+    const techUsers = await query<{ id: number }>(
+      "SELECT id FROM users WHERE role IN ('technician', 'admin') AND is_active = TRUE"
+    )
+    for (const tech of techUsers) {
+      await execute(
+        `INSERT INTO notifications (user_id, title, message, notification_type, reference_table, reference_id)
+         VALUES (?, ?, ?, 'fault', 'fault_reports', ?)`,
+        [
+          tech.id,
+          `New Fault Report: ${ref}`,
+          `${faultSeverity?.toUpperCase() || "MEDIUM"} severity — ${faultDescription?.substring(0, 100)}`,
+          insertId
+        ]
+      )
+    }
+
     return NextResponse.json(fault[0], { status: 201 })
   } catch (error) {
     console.error("Create fault error:", error)

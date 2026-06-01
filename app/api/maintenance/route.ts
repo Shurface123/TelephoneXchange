@@ -54,6 +54,20 @@ export async function POST(request: NextRequest) {
       [ref, stationId || null, maintenanceType, maintenanceDescription, scheduledDate, scheduledTime || null, estimatedDuration || null, assignedTechnician || null, session.userId]
     )
 
+    // Notify assigned technician
+    if (assignedTechnician) {
+      await execute(
+        `INSERT INTO notifications (user_id, title, message, notification_type, reference_table, reference_id)
+         VALUES (?, ?, ?, 'maintenance', 'maintenance_schedules', ?)`,
+        [
+          assignedTechnician,
+          `New Maintenance Scheduled: ${ref}`,
+          `You have been assigned to maintenance task on ${scheduledDate}. Type: ${maintenanceType}`,
+          insertId
+        ]
+      )
+    }
+
     const schedule = await query("SELECT * FROM maintenance_schedules WHERE id = ?", [insertId])
     return NextResponse.json(schedule[0], { status: 201 })
   } catch (error) {

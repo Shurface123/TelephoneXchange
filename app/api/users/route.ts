@@ -10,7 +10,7 @@ function getSession(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
     const session = getSession(request)
-    if (!session || session.role !== "admin") return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    if (!session || !["admin", "receptionist", "manager"].includes(session.role)) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
     const users = await query(
         `SELECT u.id, u.username, u.email, u.role, u.first_name, u.last_name, u.phone, u.is_active, u.created_at,

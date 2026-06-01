@@ -16,6 +16,7 @@ const ROLE_COLORS: Record<string, string> = {
   admin: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
   receptionist: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
   technician: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400",
+  manager: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400",
 }
 
 const PIE_COLORS = ["#3b82f6", "#22c55e", "#f59e0b", "#ef4444"]
@@ -284,6 +285,7 @@ export default function AdminPage() {
                       className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring">
                       <option value="receptionist">Receptionist</option>
                       <option value="technician">Technician</option>
+                      <option value="manager">Manager</option>
                       <option value="admin">Admin</option>
                     </select>
                   </div>

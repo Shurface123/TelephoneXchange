@@ -62,18 +62,15 @@ export default function CallsPage() {
   const totalPages = Math.ceil(total / limit)
 
   const exportCSV = () => {
-    const headers = ["Reference", "Caller", "Phone", "Department", "Status", "Priority", "Duration", "Date"]
-    const rows = filteredCalls.map(c => [
-      c.call_reference, c.caller_name, c.caller_phone, c.department_name || "",
-      c.call_status, c.priority, formatDuration(c.duration_seconds),
-      new Date(c.created_at).toLocaleString("en-GH")
-    ])
-    const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(",")).join("\n")
-    const blob = new Blob([csv], { type: "text/csv" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a"); a.href = url; a.download = `calls-${new Date().toISOString().split("T")[0]}.csv`; a.click()
-    URL.revokeObjectURL(url)
-    toast({ title: "Exported", description: "Call log exported as CSV" })
+    const params = new URLSearchParams()
+    if (statusFilter) params.set("status", statusFilter)
+    if (search) params.set("search", search)
+    const url = `/api/calls/export?${params}`
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `CHED_Exchange_Calls_${new Date().toISOString().split("T")[0]}.csv`
+    a.click()
+    toast({ title: "Exporting", description: "Full call log CSV downloading..." })
   }
 
   return (
