@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { query, execute } from "@/lib/db"
+import { query, queryRaw, execute } from "@/lib/db"
 
 function getSession(request: NextRequest) {
   const cookie = request.cookies.get("auth-session")
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
   sql += " ORDER BY created_at DESC LIMIT ?"
   params.push(limit)
 
-  const notifications = await query(sql, params)
+  const notifications = await queryRaw(sql, params)
 
   const [{ unread_count }] = await query<{ unread_count: number }>(
     "SELECT COUNT(*) as unread_count FROM notifications WHERE (user_id = ? OR user_id IS NULL) AND is_read = FALSE",

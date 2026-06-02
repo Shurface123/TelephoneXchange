@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { query, execute } from "@/lib/db"
+import { query, queryRaw, execute } from "@/lib/db"
 
 function getSession(request: NextRequest) {
   const cookie = request.cookies.get("auth-session")
@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
   sql += " ORDER BY c.created_at DESC LIMIT ? OFFSET ?"
   params.push(limit, offset)
 
-  const calls = await query(sql, params)
+  const calls = await queryRaw(sql, params)
   const [{ total }] = await query<{ total: number }>(
     `SELECT COUNT(*) as total FROM calls c WHERE 1=1${status ? " AND c.call_status = ?" : ""}${department ? " AND c.department_id = ?" : ""}`,
     [...(status ? [status] : []), ...(department ? [department] : [])]

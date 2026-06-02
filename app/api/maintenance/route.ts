@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { query, execute } from "@/lib/db"
+import { query, queryRaw, execute } from "@/lib/db"
 
 function getSession(request: NextRequest) {
   const cookie = request.cookies.get("auth-session")
@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
   sql += " ORDER BY ms.scheduled_date ASC, ms.scheduled_time ASC LIMIT ? OFFSET ?"
   params.push(limit, offset)
 
-  const schedules = await query(sql, params)
+  const schedules = await queryRaw(sql, params)
   const [{ total }] = await query<{ total: number }>("SELECT COUNT(*) as total FROM maintenance_schedules")
 
   return NextResponse.json({ schedules, total, page, limit })

@@ -130,9 +130,12 @@ export default function TechnicianPage() {
         })
         fetchData()
       } else {
-        toast({ title: "Failed to schedule", variant: "destructive" })
+        const errBody = await res.json().catch(() => ({}))
+        console.error("Schedule error:", errBody)
+        toast({ title: "Failed to schedule", description: errBody?.error || "Server error", variant: "destructive" })
       }
-    } catch {
+    } catch (err) {
+      console.error("Schedule exception:", err)
       toast({ title: "Error", description: "Failed to log schedule", variant: "destructive" })
     } finally {
       setSubmitting(false)
@@ -162,12 +165,15 @@ export default function TechnicianPage() {
       if (res.ok) {
         toast({ title: "Fault logged", description: "New fault report successfully submitted." })
         setShowFaultModal(false)
-        setFormState();
+        setFormState()
         fetchData()
       } else {
-        toast({ title: "Failed to report fault", variant: "destructive" })
+        const errBody = await res.json().catch(() => ({}))
+        console.error("Fault error:", errBody)
+        toast({ title: "Failed to report fault", description: errBody?.error || "Server error", variant: "destructive" })
       }
-    } catch {
+    } catch (err) {
+      console.error("Fault exception:", err)
       toast({ title: "Error", description: "Failed to report fault", variant: "destructive" })
     } finally {
       setSubmitting(false)
@@ -177,7 +183,7 @@ export default function TechnicianPage() {
   const setFormState = () => {
     setFaultForm({
       stationId: "", departmentId: "", faultType: "hardware",
-      faultCategory: "station", faultDescription: "",
+      faultCategory: "equipment", faultDescription: "",
       faultSeverity: "medium"
     })
   }
@@ -434,7 +440,8 @@ export default function TechnicianPage() {
                   >
                     <option value="preventive">Preventive</option>
                     <option value="corrective">Corrective</option>
-                    <option value="routine">Routine</option>
+                    <option value="emergency">Emergency</option>
+                    <option value="upgrade">Upgrade</option>
                   </select>
                 </div>
               </div>

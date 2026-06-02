@@ -6,21 +6,23 @@ import { useState, useEffect, useRef } from "react"
 import {
     Phone, LayoutDashboard, Receipt, Wrench, BarChart3,
     Settings, LogOut, Menu, X, PhoneCall, ChevronRight,
-    Bell, Shield, Users, Headphones
+    Bell, Shield, Users, Headphones, Mail
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ModeToggle } from "@/components/mode-toggle"
-import { useToast } from "@/hooks/use-toast"
+import { useToast } from "@/components/hooks/use-toast"
+import { CocobodLogo } from "@/components/reports/cocobod-logo"
 
 const NAV_ITEMS = [
-    { href: "/", label: "Dashboard", icon: LayoutDashboard, roles: ["admin", "receptionist", "technician"] },
+    { href: "/", label: "Dashboard", icon: LayoutDashboard, roles: ["admin", "receptionist", "technician", "manager"] },
     { href: "/receptionist", label: "Reception", icon: Headphones, roles: ["admin", "receptionist"] },
     { href: "/calls", label: "Call Log", icon: PhoneCall, roles: ["admin", "receptionist"] },
-    { href: "/billing", label: "Billing", icon: Receipt, roles: ["admin", "receptionist"] },
+    { href: "/messages", label: "Messages", icon: Mail, roles: ["admin", "receptionist", "technician", "manager"] },
+    { href: "/billing", label: "Billing", icon: Receipt, roles: ["admin", "receptionist", "manager"] },
     { href: "/maintenance", label: "Maintenance", icon: Wrench, roles: ["admin", "technician"] },
-    { href: "/reports", label: "Reports", icon: BarChart3, roles: ["admin", "receptionist", "technician"] },
+    { href: "/reports", label: "Reports", icon: BarChart3, roles: ["admin", "receptionist", "technician", "manager"] },
     { href: "/manager", label: "Management", icon: BarChart3, roles: ["admin", "manager"] },
     { href: "/admin", label: "Administration", icon: Shield, roles: ["admin"] },
 ]
@@ -152,26 +154,26 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
             {/* Sidebar */}
             <aside className={cn(
-                "fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 dark:bg-slate-950 flex flex-col transition-transform duration-300 lg:translate-x-0 lg:static lg:z-auto",
+                "fixed inset-y-0 left-0 z-50 w-64 bg-[#2C1810] border-r border-[#4A2511]/40 flex flex-col transition-transform duration-300 lg:translate-x-0 lg:static lg:z-auto",
                 sidebarOpen ? "translate-x-0" : "-translate-x-full"
             )}>
                 {/* Logo */}
-                <div className="flex items-center gap-3 px-5 py-5 border-b border-slate-700/50">
-                    <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-blue-600/30">
-                        <Phone className="h-5 w-5 text-white" />
+                <div className="flex items-center gap-3 px-5 py-5 border-b border-[#4A2511]/40">
+                    <div className="flex-shrink-0">
+                        <CocobodLogo size={36} />
                     </div>
                     <div className="min-w-0">
                         <p className="text-white font-bold text-sm leading-tight">CHED Exchange</p>
-                        <p className="text-slate-400 text-xs truncate">COCOBOD</p>
+                        <p className="text-[#D4AF37] text-[10px] tracking-wider font-semibold uppercase">COCOBOD</p>
                     </div>
-                    <button onClick={() => setSidebarOpen(false)} className="ml-auto lg:hidden text-slate-400 hover:text-white">
+                    <button onClick={() => setSidebarOpen(false)} className="ml-auto lg:hidden text-gray-400 hover:text-white">
                         <X className="h-5 w-5" />
                     </button>
                 </div>
 
                 {/* Live clock */}
-                <div className="px-5 py-3 border-b border-slate-700/50">
-                    <p className="text-slate-400 text-xs font-mono">{currentTime}</p>
+                <div className="px-5 py-3 border-b border-[#4A2511]/40">
+                    <p className="text-[#D4AF37]/80 text-xs font-mono tracking-widest">{currentTime}</p>
                 </div>
 
                 {/* Navigation */}
@@ -181,12 +183,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                         return (
                             <Link key={href} href={href} onClick={() => setSidebarOpen(false)}>
                                 <div className={cn(
-                                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all group",
+                                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all group border-l-4",
                                     isActive
-                                        ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
-                                        : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                                        ? "bg-[#722F37] text-white border-l-[#D4AF37] shadow-md shadow-[#722F37]/35"
+                                        : "text-gray-300 hover:bg-[#3D2316] hover:text-[#EEDC82] border-l-transparent"
                                 )}>
-                                    <Icon className="h-4.5 w-4.5 flex-shrink-0" />
+                                    <Icon className={cn("h-4.5 w-4.5 flex-shrink-0", isActive ? "text-[#D4AF37]" : "text-gray-400 group-hover:text-[#EEDC82]")} />
                                     <span className="flex-1">{label}</span>
                                     {label === "Reception" && activeCalls > 0 && (
                                         <span className="bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
@@ -202,17 +204,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
                 {/* User profile */}
                 {user && (
-                    <div className="p-3 border-t border-slate-700/50">
-                        <div className="flex items-center gap-3 px-2 py-2 rounded-lg bg-slate-800/50">
-                            <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+                    <div className="p-3 border-t border-[#4A2511]/40">
+                        <div className="flex items-center gap-3 px-2 py-2 rounded-lg bg-[#3D2316]/75 border border-[#4A2511]/30">
+                            <div className="w-8 h-8 rounded-full bg-[#722F37] border border-[#D4AF37]/50 flex items-center justify-center text-[#D4AF37] font-bold text-xs flex-shrink-0">
                                 {user.name?.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}
                             </div>
                             <div className="flex-1 min-w-0">
-                                <p className="text-white text-xs font-medium truncate">{user.name}</p>
-                                <p className="text-slate-400 text-xs truncate">{roleLabel[user.role] || user.role}</p>
+                                <p className="text-white text-xs font-semibold truncate">{user.name}</p>
+                                <p className="text-[#D4AF37] text-[10px] truncate font-medium">{roleLabel[user.role] || user.role}</p>
                             </div>
                             <button onClick={handleLogout} title="Logout"
-                                className="text-slate-400 hover:text-red-400 transition-colors flex-shrink-0">
+                                className="text-gray-400 hover:text-red-400 transition-colors flex-shrink-0">
                                 <LogOut className="h-4 w-4" />
                             </button>
                         </div>

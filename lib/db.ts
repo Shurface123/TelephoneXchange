@@ -17,6 +17,17 @@ export async function query<T = any>(sql: string, params?: any[]): Promise<T[]> 
     return rows as T[]
 }
 
+/**
+ * queryRaw uses pool.query() (text protocol) instead of pool.execute().
+ * Use this for queries containing LIMIT/OFFSET placeholders — MySQL's binary
+ * prepared-statement protocol (used by pool.execute) does not support them
+ * and throws "Incorrect arguments to mysqld_stmt_execute".
+ */
+export async function queryRaw<T = any>(sql: string, params?: any[]): Promise<T[]> {
+    const [rows] = await pool.query(sql, params)
+    return rows as T[]
+}
+
 export async function queryOne<T = any>(sql: string, params?: any[]): Promise<T | null> {
     const rows = await query<T>(sql, params)
     return rows[0] ?? null

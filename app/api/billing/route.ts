@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { query, execute } from "@/lib/db"
+import { query, queryRaw, execute } from "@/lib/db"
 
 function getSession(request: NextRequest) {
   const cookie = request.cookies.get("auth-session")
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
   sql += " ORDER BY b.created_at DESC LIMIT ? OFFSET ?"
   params.push(limit, offset)
 
-  const bills = await query(sql, params)
+  const bills = await queryRaw(sql, params)
   const [{ total }] = await query<{ total: number }>(
     `SELECT COUNT(*) as total FROM bills WHERE 1=1${status ? " AND bill_status = ?" : ""}`,
     status ? [status] : []
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
         billing_period_start, billing_period_end, total_calls, total_duration_seconds,
         subtotal, tax_amount, total_amount, currency, bill_status, due_date, generated_by, notes)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'GHS', 'draft', ?, ?, ?)`,
-      [invoiceNum, accountName, accountNumber || null, billTypeId || 3, departmentId || null,
+      [invoiceNum, accountName, accountNumber || null, billTypeId || 7, departmentId || null,
         periodStart, periodEnd, callStats.total_calls, callStats.total_duration,
         subtotal, taxAmount, totalAmount, dueDate.toISOString().split("T")[0], session.userId, notes || null]
     )
@@ -88,8 +88,8 @@ export async function POST(request: NextRequest) {
 
     const bill = await query("SELECT * FROM bills WHERE id = ?", [insertId])
     return NextResponse.json(bill[0], { status: 201 })
-  } catch (error) {
-    console.error("Create bill error:", error)
-    return NextResponse.json({ error: "Failed to create bill" }, { status: 500 })
+  } catch (error: any) {
+    console.error("Create bill error:", error?.message || error)
+    return NextResponse.json({ error: "Failed to create bill", detail: error?.message }, { status: 500 })
   }
 }

@@ -8,16 +8,26 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, PieChart, Pie, Cell, Legend
 } from "recharts"
-import { Download, RefreshCw, TrendingUp, Phone, DollarSign, Wrench } from "lucide-react"
+import { Download, RefreshCw, TrendingUp, Phone, DollarSign, Wrench, Loader2 } from "lucide-react"
+import { ExportModal } from "@/components/reports/export-modal"
 
-const COLORS = ["#3b82f6", "#22c55e", "#f59e0b", "#ef4444", "#8b5cf6"]
+const COLORS = ["#722F37", "#2D5016", "#D4AF37", "#8B1A1A", "#8b5cf6"]
 
 export default function ReportsPage() {
   const { toast } = useToast()
   const [stats, setStats] = useState<any>(null)
   const [billingStats, setBillingStats] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const [dateRange, setDateRange] = useState("7")
+
+  // Export Modal Data
+  const [showExportModal, setShowExportModal] = useState(false)
+  const [loadingExportData, setLoadingExportData] = useState(false)
+  const [exportData, setExportData] = useState({
+    bills: [] as any[],
+    faults: [] as any[],
+    schedules: [] as any[],
+    departments: [] as any[]
+  })
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -55,19 +65,35 @@ export default function ReportsPage() {
     { name: "Faulty", value: stats.stations.faulty },
   ].filter(d => d.value > 0) : []
 
-  const exportReport = () => {
-    const report = {
-      generated: new Date().toISOString(),
-      calls: stats?.calls,
-      billing: { ...billingStats, monthlyRevenue: billingStats?.monthlyRevenue },
-      maintenance: stats?.maintenance,
-      stations: stats?.stations,
+  // Load all logs for exporting
+  const handleOpenExport = async () => {
+    setLoadingExportData(true)
+    try {
+      const [billsRes, faultsRes, schedsRes, deptsRes] = await Promise.all([
+        fetch("/api/billing?limit=200"),
+        fetch("/api/faults?limit=200"),
+        fetch("/api/maintenance?limit=200"),
+        fetch("/api/departments")
+      ])
+
+      const billsData = billsRes.ok ? await billsRes.json() : { bills: [] }
+      const faultsData = faultsRes.ok ? await faultsRes.json() : { faults: [] }
+      const schedsData = schedsRes.ok ? await schedsRes.json() : { schedules: [] }
+      const deptsData = deptsRes.ok ? await deptsRes.json() : { departments: [] }
+
+      setExportData({
+        bills: billsData.bills || [],
+        faults: faultsData.faults || [],
+        schedules: schedsData.schedules || [],
+        departments: deptsData.departments || []
+      })
+      setShowExportModal(true)
+    } catch (e) {
+      console.error(e)
+      toast({ title: "Failed to load report data", variant: "destructive" })
+    } finally {
+      setLoadingExportData(false)
     }
-    const blob = new Blob([JSON.stringify(report, null, 2)], { type: "application/json" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a"); a.href = url; a.download = `report-${new Date().toISOString().split("T")[0]}.json`; a.click()
-    URL.revokeObjectURL(url)
-    toast({ title: "Report exported" })
   }
 
   return (
@@ -75,13 +101,22 @@ export default function ReportsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Reports & Analytics</h1>
-          <p className="text-sm text-muted-foreground">System performance overview</p>
+          <p className="text-sm text-muted-foreground">COCOBOD Exchange performance and billing insights</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={exportReport} className="gap-2">
-            <Download className="h-3.5 w-3.5" /> Export Report
+          <Button
+            onClick={handleOpenExport}
+            disabled={loadingExportData}
+            className="bg-[#722F37] hover:bg-[#8B1A1A] text-white text-xs font-semibold gap-1.5"
+          >
+            {loadingExportData ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Download className="h-3.5 w-3.5" />
+            )}
+            Export Branded Report
           </Button>
-          <Button variant="outline" size="sm" onClick={fetchData} className="gap-2">
+          <Button variant="outline" size="sm" onClick={fetchData} className="gap-2 text-xs font-semibold">
             <RefreshCw className="h-3.5 w-3.5" /> Refresh
           </Button>
         </div>
@@ -90,12 +125,12 @@ export default function ReportsPage() {
       {/* Summary KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: "Today's Calls", value: stats?.calls?.today ?? 0, sub: `${stats?.calls?.completionRate ?? 0}% completion`, icon: Phone, color: "text-blue-600" },
-          { label: "Month Revenue", value: `GHS ${Number(billingStats?.monthRevenue ?? 0).toLocaleString()}`, sub: `${billingStats?.pendingCount ?? 0} pending`, icon: DollarSign, color: "text-green-600" },
-          { label: "Open Faults", value: stats?.maintenance?.openFaults ?? 0, sub: `${stats?.maintenance?.criticalFaults ?? 0} critical`, icon: Wrench, color: "text-orange-600" },
-          { label: "Station Uptime", value: stats?.stations ? `${Math.round((stats.stations.active / stats.stations.total) * 100)}%` : "—", sub: `${stats?.stations?.active ?? 0} of ${stats?.stations?.total ?? 0} active`, icon: TrendingUp, color: "text-purple-600" },
+          { label: "Today's Calls", value: stats?.calls?.today ?? 0, sub: `${stats?.calls?.completionRate ?? 0}% completion`, icon: Phone, color: "text-[#722F37]" },
+          { label: "Month Revenue", value: `GHS ${Number(billingStats?.monthRevenue ?? 0).toLocaleString()}`, sub: `${billingStats?.pendingCount ?? 0} pending`, icon: DollarSign, color: "text-[#2D5016]" },
+          { label: "Open Faults", value: stats?.maintenance?.openFaults ?? 0, sub: `${stats?.maintenance?.criticalFaults ?? 0} critical`, icon: Wrench, color: "text-[#8B1A1A]" },
+          { label: "Station Uptime", value: stats?.stations ? `${Math.round((stats.stations.active / stats.stations.total) * 100)}%` : "—", sub: `${stats?.stations?.active ?? 0} of ${stats?.stations?.total ?? 0} active`, icon: TrendingUp, color: "text-[#D4AF37]" },
         ].map(({ label, value, sub, icon: Icon, color }) => (
-          <Card key={label}>
+          <Card key={label} className="shadow-sm">
             <CardContent className="p-5">
               <div className="flex items-center gap-3">
                 <Icon className={`h-8 w-8 ${color} flex-shrink-0`} />
@@ -113,7 +148,7 @@ export default function ReportsPage() {
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Call Volume Trend */}
-        <Card>
+        <Card className="shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-semibold">Call Volume — Last 7 Days</CardTitle>
             <CardDescription>Completed vs missed calls per day</CardDescription>
@@ -126,8 +161,8 @@ export default function ReportsPage() {
                   <XAxis dataKey="date" tick={{ fontSize: 10 }} />
                   <YAxis tick={{ fontSize: 11 }} />
                   <Tooltip />
-                  <Bar dataKey="completed" name="Completed" fill="#22c55e" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="missed" name="Missed" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="completed" name="Completed" fill="#2D5016" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="missed" name="Missed" fill="#8B1A1A" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
@@ -137,7 +172,7 @@ export default function ReportsPage() {
         </Card>
 
         {/* Revenue Trend */}
-        <Card>
+        <Card className="shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-semibold">Revenue Trend (GHS)</CardTitle>
             <CardDescription>Monthly billing revenue collected</CardDescription>
@@ -150,7 +185,7 @@ export default function ReportsPage() {
                   <XAxis dataKey="month" tick={{ fontSize: 11 }} />
                   <YAxis tick={{ fontSize: 11 }} />
                   <Tooltip formatter={(v: any) => [`GHS ${Number(v).toLocaleString()}`, "Revenue"]} />
-                  <Line type="monotone" dataKey="revenue" stroke="#3b82f6" strokeWidth={2} dot={{ r: 4 }} />
+                  <Line type="monotone" dataKey="revenue" stroke="#722F37" strokeWidth={2} dot={{ r: 4 }} />
                 </LineChart>
               </ResponsiveContainer>
             ) : (
@@ -160,7 +195,7 @@ export default function ReportsPage() {
         </Card>
 
         {/* Call Status Distribution */}
-        <Card>
+        <Card className="shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-semibold">Today's Call Distribution</CardTitle>
           </CardHeader>
@@ -181,7 +216,7 @@ export default function ReportsPage() {
         </Card>
 
         {/* Station Status */}
-        <Card>
+        <Card className="shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-semibold">Station Status Distribution</CardTitle>
           </CardHeader>
@@ -202,6 +237,19 @@ export default function ReportsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* EXPORT BRANDED REPORT MODAL */}
+      {showExportModal && (
+        <ExportModal
+          onClose={() => setShowExportModal(false)}
+          reportType="all"
+          bills={exportData.bills}
+          faults={exportData.faults}
+          schedules={exportData.schedules}
+          departments={exportData.departments}
+          stats={stats}
+        />
+      )}
     </div>
   )
 }

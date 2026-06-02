@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { query, execute } from "@/lib/db"
+import { query, queryRaw, execute } from "@/lib/db"
 
 function getSession(request: NextRequest) {
   const cookie = request.cookies.get("auth-session")
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
   sql += " ORDER BY FIELD(fr.fault_severity,'critical','high','medium','low'), fr.reported_at DESC LIMIT ? OFFSET ?"
   params.push(limit, offset)
 
-  const faults = await query(sql, params)
+  const faults = await queryRaw(sql, params)
   const [{ total }] = await query<{ total: number }>("SELECT COUNT(*) as total FROM fault_reports")
 
   return NextResponse.json({ faults, total, page, limit })

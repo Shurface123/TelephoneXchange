@@ -1,19 +1,10 @@
 {
-  "/api/calls/stats/route": "app/api/calls/stats/route.js",
-  "/api/notifications/route": "app/api/notifications/route.js",
-  "/api/dashboard/stats/route": "app/api/dashboard/stats/route.js",
-  "/api/billing/route": "app/api/billing/route.js",
-  "/api/billing/stats/route": "app/api/billing/stats/route.js",
-  "/api/users/route": "app/api/users/route.js",
-  "/api/departments/route": "app/api/departments/route.js",
-  "/api/calls/route": "app/api/calls/route.js",
-  "/api/auth/logout/route": "app/api/auth/logout/route.js",
   "/login/page": "app/login/page.js",
-  "/(dashboard)/page": "app/(dashboard)/page.js",
-  "/(dashboard)/billing/page": "app/(dashboard)/billing/page.js",
-  "/(dashboard)/calls/page": "app/(dashboard)/calls/page.js",
-  "/(dashboard)/maintenance/page": "app/(dashboard)/maintenance/page.js",
-  "/(dashboard)/manager/page": "app/(dashboard)/manager/page.js",
-  "/(dashboard)/receptionist/page": "app/(dashboard)/receptionist/page.js",
-  "/(dashboard)/admin/page": "app/(dashboard)/admin/page.js"
+  "/api/departments/route": "app/api/departments/route.js",
+  "/api/calls/stats/route": "app/api/calls/stats/route.js",
+  "/api/calls/route": "app/api/calls/route.js",
+  "/api/users/route": "app/api/users/route.js",
+  "/api/auth/me/route": "app/api/auth/me/route.js",
+  "/api/notifications/route": "app/api/notifications/route.js",
+  "/(dashboard)/receptionist/page": "app/(dashboard)/receptionist/page.js"
 }

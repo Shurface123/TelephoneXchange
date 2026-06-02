@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { query, execute } from "@/lib/db"
+import { query, queryRaw, execute } from "@/lib/db"
 
 function getSession(request: NextRequest) {
     const cookie = request.cookies.get("auth-session")
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     sql += " ORDER BY name ASC LIMIT ?"
     params.push(limit)
 
-    const contacts = await query(sql, params)
+    const contacts = await queryRaw(sql, params)
     return NextResponse.json({ contacts })
 }
 
