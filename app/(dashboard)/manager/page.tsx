@@ -178,7 +178,7 @@ export default function ManagerDashboard() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Desk Stations</p>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{data.stations?.active ?? 0} <span className="text-sm text-slate-400">/ {data.stations?.total ?? 0}</span></h3>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{data.stations?.active ?? 0} <span className="text-sm text-muted-foreground">/ {data.stations?.total ?? 0}</span></h3>
               <p className="text-[11px] text-muted-foreground mt-0.5 font-medium">
                 {data.stations?.faulty ?? 0} faulty · {data.stations?.maintenance ?? 0} in repair
               </p>
@@ -201,9 +201,9 @@ export default function ManagerDashboard() {
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={formattedCallVolume}>
                     <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
-                    <XAxis dataKey="date" fontSize={11} stroke="#94a3b8" />
-                    <YAxis fontSize={11} stroke="#94a3b8" />
-                    <Tooltip contentStyle={{ borderRadius: "8px", border: "1px solid #e2e8f0" }} />
+                    <XAxis dataKey="date" fontSize={11} stroke="hsl(var(--muted-foreground))" />
+                    <YAxis fontSize={11} stroke="hsl(var(--muted-foreground))" />
+                    <Tooltip contentStyle={{ borderRadius: "8px", border: "1px solid hsl(var(--border))" }} />
                     <Legend wrapperStyle={{ fontSize: "11px", paddingTop: "10px" }} />
                     <Bar dataKey="completed" name="Completed" fill="#3b82f6" radius={[4, 4, 0, 0]} />
                     <Bar dataKey="missed" name="Missed/Dropped" fill="#ef4444" radius={[4, 4, 0, 0]} />
@@ -257,7 +257,7 @@ export default function ManagerDashboard() {
               {data.calls?.byDept?.slice(0, 4).map((entry: any, index: number) => (
                 <div key={entry.department_name} className="flex items-center gap-1.5 text-[10px]">
                   <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
-                  <span className="truncate max-w-[100px] font-medium text-slate-700 dark:text-slate-300">{entry.department_name} ({entry.call_count})</span>
+                  <span className="truncate max-w-[100px] font-medium text-foreground/80">{entry.department_name} ({entry.call_count})</span>
                 </div>
               ))}
             </div>
@@ -291,7 +291,7 @@ export default function ManagerDashboard() {
                 <span className="font-semibold text-muted-foreground">Call Completion Rate</span>
                 <span className="font-bold">{data.calls?.completionRate}%</span>
               </div>
-              <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
+              <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
                 <div className="bg-blue-600 h-full rounded-full transition-all duration-500" style={{ width: `${data.calls?.completionRate || 0}%` }} />
               </div>
             </div>
@@ -301,8 +301,8 @@ export default function ManagerDashboard() {
               <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 block mb-2">Recent Monthly Revenue</span>
               <div className="space-y-2 max-h-[140px] overflow-y-auto">
                 {formattedMonthlyRevenue.slice(0, 3).map((trend: any) => (
-                  <div key={trend.month} className="flex justify-between items-center p-2 rounded-lg bg-gray-50/50 dark:bg-slate-900/50 border border-gray-100 dark:border-slate-800 text-xs">
-                    <span className="font-medium text-slate-700 dark:text-slate-300">{trend.month}</span>
+                  <div key={trend.month} className="flex justify-between items-center p-2 rounded-lg bg-gray-50/50 dark:bg-muted/30 border border-gray-100 dark:border-border/40 text-xs">
+                    <span className="font-medium text-foreground/80">{trend.month}</span>
                     <span className="font-bold text-emerald-600">₵{parseFloat(trend.revenue).toLocaleString("en-GH", { minimumFractionDigits: 2 })}</span>
                   </div>
                 ))}
@@ -340,7 +340,7 @@ export default function ManagerDashboard() {
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="flex h-full items-center justify-center text-xs text-slate-400">
+                <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
                   No registered active faults
                 </div>
               )}
@@ -350,7 +350,7 @@ export default function ManagerDashboard() {
               {severityPieData.map((item: any, index: number) => (
                 <div key={item.name} className="flex items-center gap-1.5 text-[9px]">
                   <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: COLORS[(index + 3) % COLORS.length] }} />
-                  <span className="truncate max-w-[120px] font-medium text-slate-700 dark:text-slate-300">{item.name} ({item.value})</span>
+                  <span className="truncate max-w-[120px] font-medium text-foreground/80">{item.name} ({item.value})</span>
                 </div>
               ))}
             </div>
@@ -367,9 +367,9 @@ export default function ManagerDashboard() {
             <Badge className="bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 border border-blue-150 uppercase tracking-widest text-[9px]">Live</Badge>
           </CardHeader>
           <CardContent className="pt-4 px-2">
-            <div className="space-y-3 max-h-[280px] overflow-y-auto pr-2 divide-y divide-gray-50 dark:divide-slate-800">
+            <div className="space-y-3 max-h-[280px] overflow-y-auto pr-2 divide-y divide-border/40">
               {data.recentActivity?.length === 0 ? (
-                <div className="text-center text-xs text-slate-400 py-12">
+                <div className="text-center text-xs text-muted-foreground py-12">
                   No recent admin operations logged
                 </div>
               ) : (
@@ -377,12 +377,12 @@ export default function ManagerDashboard() {
                   <div key={log.id} className={`pt-2.5 first:pt-0 text-[11px] flex justify-between gap-3 items-start`}>
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="font-semibold text-slate-800 dark:text-slate-200">{log.user_name || "System"}</span>
-                        <span className="text-[10px] px-1 py-0.2 bg-slate-100 dark:bg-slate-800 rounded font-mono font-bold text-slate-500 uppercase">{log.action}</span>
+                        <span className="font-semibold text-foreground/90">{log.user_name || "System"}</span>
+                        <span className="text-[10px] px-1 py-0.2 bg-muted rounded font-mono font-bold text-muted-foreground uppercase">{log.action}</span>
                       </div>
-                      <p className="text-slate-400 mt-0.5 truncate max-w-[180px]">Table: {log.table_name} · ID: {log.record_id}</p>
+                      <p className="text-muted-foreground mt-0.5 truncate max-w-[180px]">Table: {log.table_name} · ID: {log.record_id}</p>
                     </div>
-                    <span className="text-[9px] font-mono text-slate-400 flex-shrink-0 mt-0.5">
+                    <span className="text-[9px] font-mono text-muted-foreground flex-shrink-0 mt-0.5">
                       {new Date(log.created_at).toLocaleTimeString("en-GH", { hour: "2-digit", minute: "2-digit" })}
                     </span>
                   </div>

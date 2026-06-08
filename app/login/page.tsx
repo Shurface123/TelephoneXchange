@@ -63,6 +63,21 @@ function LoginForm() {
   const [shake, setShake] = useState(false)
   const [currentTime, setCurrentTime] = useState("")
 
+  // Slideshow background images state
+  const [currentBg, setCurrentBg] = useState(0)
+  const backgrounds = [
+    "/images/cocoa_pods_tree.png",
+    "/images/cocoa_beans_harvest.png",
+    "/images/cocoa_plantation_farm.png"
+  ]
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentBg((prev) => (prev + 1) % backgrounds.length)
+    }, 6000) // Transition every 6 seconds
+    return () => clearInterval(timer)
+  }, [])
+
   useEffect(() => {
     const update = () => setCurrentTime(new Date().toLocaleString("en-GH", {
       weekday: "long", year: "numeric", month: "long", day: "numeric",
@@ -104,8 +119,7 @@ function LoginForm() {
           role === "technician" ? "/maintenance" :
           role === "receptionist" ? "/receptionist" :
           role === "manager" ? "/manager" : "/"
-        router.push(dest)
-        router.refresh()
+        window.location.href = dest
       }
     } catch {
       setError("Connection error. Please check your network and try again.")
@@ -116,11 +130,31 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden"
-      style={{ background: "linear-gradient(135deg, #1A0A00 0%, #2C1810 40%, #3D1F0D 70%, #1A0A00 100%)" }}>
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-black">
+      
+      {/* Cocoa Slideshow Background */}
+      <div className="absolute inset-0 z-0">
+        {backgrounds.map((bg, idx) => (
+          <div
+            key={bg}
+            className="absolute inset-0 bg-cover bg-center transition-opacity duration-[1500ms] ease-in-out"
+            style={{
+              backgroundImage: `url(${bg})`,
+              opacity: currentBg === idx ? 0.35 : 0,
+            }}
+          />
+        ))}
+        {/* Layer a subtle gradient over the images */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: "linear-gradient(135deg, rgba(26, 10, 0, 0.8) 0%, rgba(44, 24, 16, 0.7) 40%, rgba(61, 31, 13, 0.75) 70%, rgba(26, 10, 0, 0.8) 100%)"
+          }}
+        />
+      </div>
 
       {/* Animated background orbs — cocoa-themed */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-1">
         <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full blur-3xl animate-pulse"
           style={{ background: "rgba(212,175,55,0.08)" }} />
         <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full blur-3xl animate-pulse"

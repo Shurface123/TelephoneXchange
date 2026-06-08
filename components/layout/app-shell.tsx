@@ -181,22 +181,25 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     {filteredNav.map(({ href, label, icon: Icon }) => {
                         const isActive = href === "/" ? pathname === "/" : pathname === href || (pathname ?? "").startsWith(href + "/")
                         return (
-                            <Link key={href} href={href} onClick={() => setSidebarOpen(false)}>
-                                <div className={cn(
+                            <Link 
+                                key={href} 
+                                href={href} 
+                                onClick={() => setSidebarOpen(false)}
+                                className={cn(
                                     "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all group border-l-4",
                                     isActive
                                         ? "bg-[#722F37] text-white border-l-[#D4AF37] shadow-md shadow-[#722F37]/35"
                                         : "text-gray-300 hover:bg-[#3D2316] hover:text-[#EEDC82] border-l-transparent"
-                                )}>
-                                    <Icon className={cn("h-4.5 w-4.5 flex-shrink-0", isActive ? "text-[#D4AF37]" : "text-gray-400 group-hover:text-[#EEDC82]")} />
-                                    <span className="flex-1">{label}</span>
-                                    {label === "Reception" && activeCalls > 0 && (
-                                        <span className="bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
-                                            {activeCalls}
-                                        </span>
-                                    )}
-                                    {isActive && <ChevronRight className="h-3.5 w-3.5 opacity-60" />}
-                                </div>
+                                )}
+                            >
+                                <Icon className={cn("h-4.5 w-4.5 flex-shrink-0", isActive ? "text-[#D4AF37]" : "text-gray-400 group-hover:text-[#EEDC82]")} />
+                                <span className="flex-1">{label}</span>
+                                {label === "Reception" && activeCalls > 0 && (
+                                    <span className="bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                                        {activeCalls}
+                                    </span>
+                                )}
+                                {isActive && <ChevronRight className="h-3.5 w-3.5 opacity-60" />}
                             </Link>
                         )
                     })}
@@ -225,94 +228,94 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             {/* Main content */}
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
                 {/* Header */}
-                <header className="bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-700/50 px-4 py-3 flex items-center gap-3 flex-shrink-0">
-                    <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-gray-500 hover:text-gray-900 dark:hover:text-white">
-                        <Menu className="h-5 w-5" />
-                    </button>
-
-                    <div className="flex-1">
-                        <h2 className="text-sm font-semibold text-gray-900 dark:text-white">{getPageTitle()}</h2>
-                        <p className="text-xs text-muted-foreground hidden sm:block">
-                            COCOBOD CHED · Telephone Exchange Management System
-                        </p>
-                    </div>
-
-                    <div className="flex items-center gap-2 relative">
-                        {activeCalls > 0 && (
-                            <Link href="/receptionist">
-                                <div className="flex items-center gap-1.5 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 px-3 py-1.5 rounded-full text-xs font-medium border border-blue-200 dark:border-blue-800 hover:bg-blue-100 transition-colors">
-                                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
-                                    {activeCalls} active
-                                </div>
-                            </Link>
-                        )}
-                        
-                        {/* Notifications Bell Dropdown */}
-                        <div className="relative">
-                            <button
-                                onClick={() => setShowNotifications(!showNotifications)}
-                                className="relative p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 transition-all focus:outline-none"
-                            >
-                                <Bell className="h-5 w-5" />
-                                {unreadCount > 0 && (
-                                    <span className="absolute top-1 right-1 bg-red-500 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center border border-white dark:border-slate-900 animate-pulse">
-                                        {unreadCount}
-                                    </span>
-                                )}
-                            </button>
-
-                            {showNotifications && (
-                                <>
-                                    <div 
-                                        className="fixed inset-0 z-45" 
-                                        onClick={() => setShowNotifications(false)}
-                                    />
-                                    <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-gray-150 dark:border-slate-800 z-50 overflow-hidden divide-y divide-gray-100 dark:divide-slate-800 animate-in fade-in slide-in-from-top-2 duration-200">
-                                        <div className="px-4 py-3 flex items-center justify-between bg-gray-50/50 dark:bg-slate-900/50">
-                                            <span className="font-semibold text-xs text-gray-900 dark:text-white uppercase tracking-wider">Alerts</span>
-                                            {unreadCount > 0 && (
-                                                <button 
-                                                    onClick={handleMarkAllRead}
-                                                    className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium"
-                                                >
-                                                    Mark all read
-                                                </button>
-                                            )}
-                                        </div>
-                                        <div className="max-h-72 overflow-y-auto divide-y divide-gray-100 dark:divide-slate-800">
-                                            {notifications.length === 0 ? (
-                                                <div className="p-6 text-center text-xs text-muted-foreground">
-                                                    No notifications
-                                                </div>
-                                            ) : (
-                                                notifications.map((n: any) => (
-                                                    <div 
-                                                        key={n.id} 
-                                                        className={cn(
-                                                            "px-4 py-3 text-left transition-colors",
-                                                            n.is_read ? "bg-white dark:bg-slate-900" : "bg-blue-50/40 dark:bg-blue-950/20"
-                                                        )}
-                                                    >
-                                                        <div className="flex justify-between items-start gap-2">
-                                                            <p className={cn("text-xs font-semibold", n.is_read ? "text-gray-900 dark:text-white" : "text-blue-600 dark:text-blue-400")}>
-                                                                {n.title}
-                                                            </p>
-                                                            {!n.is_read && <span className="w-1.5 h-1.5 bg-blue-600 rounded-full flex-shrink-0 mt-1" />}
-                                                        </div>
-                                                        {n.message && (
-                                                            <p className="text-[11px] text-muted-foreground mt-1 leading-snug">
-                                                                {n.message}
-                                                            </p>
-                                                        )}
-                                                        <p className="text-[9px] text-gray-400 dark:text-gray-500 mt-1.5 font-mono">
-                                                            {new Date(n.created_at).toLocaleString("en-GH", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
-                                                        </p>
-                                                    </div>
-                                                ))
-                                            )}
-                                        </div>
-                                    </div>
-                                </>
+                 <header className="bg-white dark:bg-card border-b border-gray-200 dark:border-border/40 px-4 py-3 flex items-center gap-3 flex-shrink-0">
+                     <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-gray-500 hover:text-gray-900 dark:hover:text-white">
+                         <Menu className="h-5 w-5" />
+                     </button>
+ 
+                     <div className="flex-1">
+                         <h2 className="text-sm font-semibold text-gray-900 dark:text-white">{getPageTitle()}</h2>
+                         <p className="text-xs text-muted-foreground hidden sm:block">
+                             COCOBOD CHED · Telephone Exchange Management System
+                         </p>
+                     </div>
+ 
+                     <div className="flex items-center gap-2 relative">
+                         {activeCalls > 0 && (
+                             <Link href="/receptionist">
+                                 <div className="flex items-center gap-1.5 bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 px-3 py-1.5 rounded-full text-xs font-medium border border-amber-200 dark:border-amber-900/50 hover:bg-amber-100 dark:hover:bg-amber-950/30 transition-colors">
+                                     <span className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse" />
+                                     {activeCalls} active
+                                 </div>
+                             </Link>
+                         )}
+                         
+                         {/* Notifications Bell Dropdown */}
+                         <div className="relative">
+                             <button
+                                 onClick={() => setShowNotifications(!showNotifications)}
+                                 className="relative p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white rounded-full hover:bg-gray-100 dark:hover:bg-muted transition-all focus:outline-none"
+                             >
+                                 <Bell className="h-5 w-5" />
+                                 {unreadCount > 0 && (
+                                     <span className="absolute top-1 right-1 bg-red-500 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center border border-white dark:border-background animate-pulse">
+                                         {unreadCount}
+                                     </span>
+                                 )}
+                             </button>
+ 
+                             {showNotifications && (
+                                 <>
+                                     <div 
+                                         className="fixed inset-0 z-45" 
+                                         onClick={() => setShowNotifications(false)}
+                                     />
+                                     <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-card rounded-xl shadow-2xl border border-gray-150 dark:border-border/60 z-50 overflow-hidden divide-y divide-gray-100 dark:divide-border/40 animate-in fade-in slide-in-from-top-2 duration-200">
+                                         <div className="px-4 py-3 flex items-center justify-between bg-gray-50/50 dark:bg-muted/40">
+                                             <span className="font-semibold text-xs text-gray-900 dark:text-white uppercase tracking-wider">Alerts</span>
+                                             {unreadCount > 0 && (
+                                                 <button 
+                                                     onClick={handleMarkAllRead}
+                                                     className="text-xs text-primary dark:text-[#D4AF37] hover:text-[#722F37] dark:hover:text-[#EEDC82] font-medium"
+                                                 >
+                                                     Mark all read
+                                                 </button>
+                                             )}
+                                         </div>
+                                         <div className="max-h-72 overflow-y-auto divide-y divide-gray-100 dark:divide-border/40">
+                                             {notifications.length === 0 ? (
+                                                 <div className="p-6 text-center text-xs text-muted-foreground">
+                                                     No notifications
+                                                 </div>
+                                             ) : (
+                                                 notifications.map((n: any) => (
+                                                     <div 
+                                                         key={n.id} 
+                                                         className={cn(
+                                                             "px-4 py-3 text-left transition-colors",
+                                                             n.is_read ? "bg-white dark:bg-card" : "bg-amber-500/5 dark:bg-amber-500/10"
+                                                         )}
+                                                     >
+                                                         <div className="flex justify-between items-start gap-2">
+                                                             <p className={cn("text-xs font-semibold", n.is_read ? "text-gray-900 dark:text-white" : "text-[#722F37] dark:text-[#D4AF37]")}>
+                                                                 {n.title}
+                                                             </p>
+                                                             {!n.is_read && <span className="w-1.5 h-1.5 bg-amber-500 rounded-full flex-shrink-0 mt-1" />}
+                                                         </div>
+                                                         {n.message && (
+                                                             <p className="text-[11px] text-muted-foreground mt-1 leading-snug">
+                                                                 {n.message}
+                                                             </p>
+                                                         )}
+                                                         <p className="text-[9px] text-gray-400 dark:text-gray-500 mt-1.5 font-mono">
+                                                             {new Date(n.created_at).toLocaleString("en-GH", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                                                         </p>
+                                                     </div>
+                                                 ))
+                                             )}
+                                         </div>
+                                     </div>
+                                 </>
                             )}
                         </div>
 

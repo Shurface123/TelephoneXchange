@@ -389,37 +389,37 @@ export function ExportModal({
     URL.revokeObjectURL(url)
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-200 dark:border-slate-700 animate-in zoom-in-95 duration-200">
-        {/* Header */}
-        <div className="px-6 py-4 flex items-center justify-between" style={{ background: "linear-gradient(135deg, #722F37, #8B1A1A)" }}>
-          <div>
-            <h3 className="font-bold text-white text-sm">Export Report</h3>
-            <p className="text-xs mt-0.5" style={{ color: "#D4AF37" }}>Choose format and filters</p>
-          </div>
-          <button onClick={onClose} className="text-white/60 hover:text-white transition-colors">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        <div className="p-6 space-y-5">
-          {/* Format selector */}
-          <div>
-            <label className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 block uppercase tracking-wider">
-              File Format
-            </label>
-            <div className="grid grid-cols-3 gap-2">
-              {FORMAT_OPTIONS.map(({ value, label, Icon, desc }) => (
-                <button
-                  key={value}
-                  onClick={() => setFormat(value)}
-                  className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all text-center ${
-                    format === value
-                      ? "border-[#722F37] bg-[#722F37]/5 dark:bg-[#722F37]/10"
-                      : "border-gray-200 dark:border-slate-700 hover:border-gray-300"
-                  }`}
-                >
+   return (
+     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+       <div className="bg-white dark:bg-card rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-200 dark:border-border/40 animate-in zoom-in-95 duration-200">
+         {/* Header */}
+         <div className="px-6 py-4 flex items-center justify-between" style={{ background: "linear-gradient(135deg, #722F37, #8B1A1A)" }}>
+           <div>
+             <h3 className="font-bold text-white text-sm">Export Report</h3>
+             <p className="text-xs mt-0.5" style={{ color: "#D4AF37" }}>Choose format and filters</p>
+           </div>
+           <button onClick={onClose} className="text-white/60 hover:text-white transition-colors">
+             <X className="h-5 w-5" />
+           </button>
+         </div>
+ 
+         <div className="p-6 space-y-5">
+           {/* Format selector */}
+           <div>
+             <label className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 block uppercase tracking-wider">
+               File Format
+             </label>
+             <div className="grid grid-cols-3 gap-2">
+               {FORMAT_OPTIONS.map(({ value, label, Icon, desc }) => (
+                 <button
+                   key={value}
+                   onClick={() => setFormat(value)}
+                   className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all text-center ${
+                     format === value
+                       ? "border-[#722F37] bg-[#722F37]/5 dark:bg-[#722F37]/10"
+                       : "border-gray-200 dark:border-border/40 hover:border-gray-300"
+                   }`}
+                 >
                   <Icon className={`h-5 w-5 ${format === value ? "text-[#722F37]" : "text-gray-400"}`} />
                   <span className={`text-xs font-semibold ${format === value ? "text-[#722F37]" : "text-gray-600 dark:text-gray-400"}`}>{label}</span>
                   <span className="text-[9px] text-gray-400 leading-tight">{desc}</span>

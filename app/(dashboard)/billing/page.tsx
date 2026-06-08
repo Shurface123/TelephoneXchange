@@ -300,7 +300,7 @@ export default function BillingPage() {
       {/* GENERATE INVOICE MODAL */}
       {showGenerateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md border border-gray-200 dark:border-slate-800 overflow-hidden animate-in zoom-in-95 duration-200">
+          <div className="bg-white dark:bg-card rounded-2xl shadow-2xl w-full max-w-md border border-gray-200 dark:border-border/40 overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="px-6 py-4 flex items-center justify-between" style={{ background: "linear-gradient(135deg, #722F37, #8B1A1A)" }}>
               <div>
                 <h3 className="font-bold text-white text-sm">Generate Call Invoice</h3>

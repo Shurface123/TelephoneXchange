@@ -269,7 +269,7 @@ export default function MessagesAndConferencesPage() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Communication Center</h1>
           <p className="text-sm text-muted-foreground">Manage internal messages and coordinate web conferences</p>
         </div>
-        <div className="flex gap-2 bg-gray-100 dark:bg-slate-800 p-1 rounded-xl w-fit">
+        <div className="flex gap-2 bg-gray-100 dark:bg-muted p-1 rounded-xl w-fit">
           <button
             onClick={() => { setActiveTab("messages"); setSelectedMsg(null) }}
             className={`px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
@@ -297,15 +297,15 @@ export default function MessagesAndConferencesPage() {
       {activeTab === "messages" && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-210px)] min-h-[500px]">
           {/* Messages List (Left Sidebar) */}
-          <div className="lg:col-span-5 flex flex-col bg-white dark:bg-slate-900 border rounded-2xl overflow-hidden">
+          <div className="lg:col-span-5 flex flex-col bg-white dark:bg-card border rounded-2xl overflow-hidden">
             {/* Folder Toggle & Compose */}
             <div className="p-4 border-b space-y-3">
               <div className="flex items-center justify-between gap-2">
-                <div className="flex gap-1 bg-gray-50 dark:bg-slate-950/40 p-1 rounded-lg w-fit">
+                <div className="flex gap-1 bg-gray-50 dark:bg-background/40 p-1 rounded-lg w-fit">
                   <button
                     onClick={() => { setMsgTab("inbox"); setSelectedMsg(null) }}
                     className={`px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1 transition-all ${
-                      msgTab === "inbox" ? "bg-white dark:bg-slate-850 text-gray-900 dark:text-white shadow-sm" : "text-muted-foreground"
+                      msgTab === "inbox" ? "bg-white dark:bg-muted text-gray-900 dark:text-white shadow-sm" : "text-muted-foreground"
                     }`}
                   >
                     <Inbox className="h-3 w-3" /> Inbox
@@ -313,7 +313,7 @@ export default function MessagesAndConferencesPage() {
                   <button
                     onClick={() => { setMsgTab("sent"); setSelectedMsg(null) }}
                     className={`px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1 transition-all ${
-                      msgTab === "sent" ? "bg-white dark:bg-slate-850 text-gray-900 dark:text-white shadow-sm" : "text-muted-foreground"
+                      msgTab === "sent" ? "bg-white dark:bg-muted text-gray-900 dark:text-white shadow-sm" : "text-muted-foreground"
                     }`}
                   >
                     <ArrowUpRight className="h-3 w-3" /> Sent
@@ -332,13 +332,13 @@ export default function MessagesAndConferencesPage() {
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   placeholder="Search subject, body, sender..."
-                  className="pl-8 text-xs h-9 bg-gray-50 dark:bg-slate-950/20 border-gray-200 dark:border-slate-800"
+                  className="pl-8 text-xs h-9 bg-gray-50 dark:bg-background/20 border-gray-200 dark:border-border/40"
                 />
               </div>
             </div>
 
             {/* List */}
-            <div className="flex-1 overflow-y-auto divide-y divide-gray-100 dark:divide-slate-800">
+            <div className="flex-1 overflow-y-auto divide-y divide-gray-100 dark:divide-border/40">
               {loadingMsgs ? (
                 <div className="p-8 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" /></div>
               ) : filteredMessages.length === 0 ? (
@@ -356,10 +356,10 @@ export default function MessagesAndConferencesPage() {
                       onClick={() => handleMsgSelect(m)}
                       className={`w-full text-left p-4 flex gap-3 transition-colors ${
                         isSelected
-                          ? "bg-slate-50 dark:bg-slate-800/40 border-l-4 border-l-[#722F37]"
+                          ? "bg-[#722F37]/5 dark:bg-[#722F37]/10 border-l-4 border-l-[#722F37]"
                           : unread
-                          ? "bg-blue-50/20 dark:bg-blue-950/5 hover:bg-gray-50 dark:hover:bg-slate-800/20 border-l-4 border-l-transparent"
-                          : "hover:bg-gray-50 dark:hover:bg-slate-800/20 border-l-4 border-l-transparent"
+                          ? "bg-amber-500/5 dark:bg-amber-500/5 hover:bg-gray-50 dark:hover:bg-muted/30 border-l-4 border-l-transparent"
+                          : "hover:bg-gray-50 dark:hover:bg-muted/30 border-l-4 border-l-transparent"
                       }`}
                     >
                       <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#722F37] to-[#8B1A1A] flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
@@ -399,11 +399,11 @@ export default function MessagesAndConferencesPage() {
           </div>
 
           {/* Message Thread Details (Right Pane) */}
-          <div className="lg:col-span-7 flex flex-col bg-white dark:bg-slate-900 border rounded-2xl overflow-hidden">
+          <div className="lg:col-span-7 flex flex-col bg-white dark:bg-card border rounded-2xl overflow-hidden">
             {selectedMsg ? (
               <div className="flex flex-col h-full">
                 {/* Thread Header */}
-                <div className="p-6 border-b flex items-start justify-between bg-slate-50/50 dark:bg-slate-950/20">
+                <div className="p-6 border-b flex items-start justify-between bg-gray-50/50 dark:bg-background/20">
                   <div className="space-y-1.5">
                     <div className="flex items-center gap-2 flex-wrap">
                       <h2 className="text-base font-bold text-gray-900 dark:text-white">{selectedMsg.subject}</h2>
@@ -429,7 +429,7 @@ export default function MessagesAndConferencesPage() {
                 {/* Message Body */}
                 <div className="flex-1 p-6 overflow-y-auto space-y-6">
                   {/* The main body of the message */}
-                  <div className="bg-[#FDFAFD] dark:bg-slate-800/10 border border-gray-100 dark:border-slate-800/60 p-5 rounded-2xl shadow-sm">
+                  <div className="bg-[#FDFAFD] dark:bg-muted/10 border border-gray-100 dark:border-border/60 p-5 rounded-2xl shadow-sm">
                     <div className="flex items-center gap-3 mb-4">
                       <div className="w-9 h-9 rounded-full bg-[#722F37]/10 flex items-center justify-center text-[#722F37] font-bold text-sm">
                         {(msgTab === "inbox" ? selectedMsg.sender_name : selectedMsg.recipient_name)?.slice(0,2).toUpperCase()}
@@ -451,8 +451,8 @@ export default function MessagesAndConferencesPage() {
 
                 {/* Reply section (Only if received in inbox) */}
                 {msgTab === "inbox" && (
-                  <form onSubmit={handleReplySubmit} className="p-4 border-t bg-gray-50/50 dark:bg-slate-950/20">
-                    <div className="flex items-end gap-3 bg-white dark:bg-slate-900 border rounded-xl p-2.5 focus-within:ring-2 focus-within:ring-[#722F37]/20 transition-all">
+                  <form onSubmit={handleReplySubmit} className="p-4 border-t bg-gray-50/50 dark:bg-background/20">
+                    <div className="flex items-end gap-3 bg-white dark:bg-card border rounded-xl p-2.5 focus-within:ring-2 focus-within:ring-[#722F37]/20 transition-all">
                       <textarea
                         value={replyText}
                         onChange={e => setReplyText(e.target.value)}
@@ -516,7 +516,7 @@ export default function MessagesAndConferencesPage() {
                       <div className="space-y-1">
                         <div className="flex items-center justify-between">
                           <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
-                            conf.status === "scheduled" ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400" :
+                            conf.status === "scheduled" ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400" :
                             conf.status === "in_progress" ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 animate-pulse" :
                             "bg-gray-100 text-gray-700"
                           }`}>
@@ -573,7 +573,7 @@ export default function MessagesAndConferencesPage() {
                             className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
                               userParticipant.response_status === "accepted"
                                 ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-950/10 dark:text-green-400"
-                                : "bg-white hover:bg-green-50 border-gray-250 text-gray-700 hover:text-green-700 hover:border-green-300 dark:bg-slate-900"
+                                : "bg-white hover:bg-green-50 border-gray-255 text-gray-700 hover:text-green-700 hover:border-green-300 dark:bg-card"
                             }`}
                           >
                             <CheckCircle2 className="h-3.5 w-3.5" /> Accept
@@ -584,7 +584,7 @@ export default function MessagesAndConferencesPage() {
                             className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
                               userParticipant.response_status === "declined"
                                 ? "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/10 dark:text-red-400"
-                                : "bg-white hover:bg-red-50 border-gray-250 text-gray-700 hover:text-red-700 hover:border-red-300 dark:bg-slate-900"
+                                : "bg-white hover:bg-red-50 border-gray-255 text-gray-700 hover:text-red-700 hover:border-red-300 dark:bg-card"
                             }`}
                           >
                             <XCircle className="h-3.5 w-3.5" /> Decline
@@ -608,7 +608,7 @@ export default function MessagesAndConferencesPage() {
       {/* COMPOSE MESSAGE MODAL */}
       {showComposeModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg border border-gray-200 dark:border-slate-800 overflow-hidden animate-in zoom-in-95 duration-200">
+          <div className="bg-white dark:bg-card rounded-2xl shadow-2xl w-full max-w-lg border border-gray-200 dark:border-border/40 overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="px-6 py-4 flex items-center justify-between" style={{ background: "linear-gradient(135deg, #722F37, #8B1A1A)" }}>
               <div>
                 <h3 className="font-bold text-white text-sm">New Internal Message</h3>
@@ -686,7 +686,7 @@ export default function MessagesAndConferencesPage() {
       {/* SCHEDULE CONFERENCE MODAL */}
       {showConfModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg border border-gray-200 dark:border-slate-800 overflow-hidden animate-in zoom-in-95 duration-200">
+          <div className="bg-white dark:bg-card rounded-2xl shadow-2xl w-full max-w-lg border border-gray-200 dark:border-border/40 overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="px-6 py-4 flex items-center justify-between" style={{ background: "linear-gradient(135deg, #722F37, #8B1A1A)" }}>
               <div>
                 <h3 className="font-bold text-white text-sm">Schedule Web Conference</h3>
@@ -755,7 +755,7 @@ export default function MessagesAndConferencesPage() {
 
               <div>
                 <label className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1 block">Invite Staff participants</label>
-                <div className="max-h-28 overflow-y-auto border border-gray-200 dark:border-slate-800 rounded-lg p-2.5 space-y-2 bg-gray-50/50 dark:bg-slate-950/20">
+                <div className="max-h-28 overflow-y-auto border border-gray-200 dark:border-border/40 rounded-lg p-2.5 space-y-2 bg-gray-50/50 dark:bg-background/20">
                   {users.map(u => (
                     <label key={u.id} className="flex items-center gap-2 text-xs text-gray-700 dark:text-gray-300 cursor-pointer select-none">
                       <input

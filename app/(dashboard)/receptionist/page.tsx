@@ -392,8 +392,8 @@ export default function ReceptionistPage() {
       {/* Call Routing/Transfer Modal */}
       {transferCallId !== null && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-gray-150 dark:border-slate-800 w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="px-6 py-4 border-b border-gray-150 dark:border-slate-800 bg-gray-50/50 dark:bg-slate-900/50 flex items-center justify-between">
+          <div className="bg-white dark:bg-card rounded-xl shadow-2xl border border-gray-150 dark:border-border/60 w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="px-6 py-4 border-b border-gray-150 dark:border-border/60 bg-gray-50/50 dark:bg-muted/40 flex items-center justify-between">
               <div>
                 <h3 className="font-bold text-sm text-gray-900 dark:text-white uppercase tracking-wider">Route Active Call</h3>
                 <p className="text-xs text-muted-foreground mt-0.5">Route call to department & operator</p>
